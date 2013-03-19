@@ -40,7 +40,7 @@ var h = function(e) {
     }
     
     e.reverse = function(a) {
-        return a.reverse
+        return a.reverse()
     }
     
     e.length = function(a) {
@@ -56,7 +56,7 @@ var h = function(e) {
     
     e.foldl1 = function(f, a) {
         var s = a[0]
-        for (var i = 1; i < a.length; a++) {
+        for (var i = 1; i < a.length; i++) {
             s = f(s, a[i])
         }
         return s
@@ -71,7 +71,7 @@ var h = function(e) {
     
     e.foldr1 = function(f, a) {
         var s = a[a.length - 1]
-        for (var i = a.length - 2; i >= 0; a--) {
+        for (var i = a.length - 2; i >= 0; i--) {
             s = f(s, a[i])
         }
         return s
@@ -116,31 +116,33 @@ var h = function(e) {
     e.sum = function(a) {
         var s = 0
         for (var i in a) {
-            s += f(a[i])
+            s += a[i]
         }
-        return true
+        return s
     }
     
     e.product = function(a) {
-        var s = 0
+        var s = 1
         for (var i in a) {
-            s *= f(a[i])
+            s *= a[i]
         }
-        return true
+        return s
     }
     
     e.concat = function(a) {
         var r = []
         for (var i in a) {
-            r.concat(a[i])
+            r  = r.concat(a[i])
         }
+        return r
     }
     
     e.concatMap = function(f, a) {
         var r = []
         for (var i in a) {
-            r.concat(f(a[i]))
+            r = r.concat(f(a[i]))
         }
+        return r
     }
     
     e.maximum = function(a) {
@@ -175,6 +177,9 @@ var h = function(e) {
     
     e.drop = function(n, a) {
         var alen = a.length
+        if (n < 1) {
+            return a
+        }
         if (n > alen) {
             return []
         }
@@ -192,8 +197,11 @@ var h = function(e) {
     e.takeWhile = function(pred, a) {
         var a1 = []
         for (var i in a) {
-            if (pred[a[i]] == true) {
-                a1.push[a[i]]
+            var c = a[i]
+            if (pred(c) == true) {
+                a1.push(c)
+            } else {
+                return a1
             }
         }
         return a1
@@ -202,8 +210,9 @@ var h = function(e) {
     e.dropWhile = function(pred, a) {
         var a1 = []
         for (var i in a) {
-            if (pred[a[i]] == false) {
-                return a.slice(0)
+            var c = a[i]
+            if (pred(c) == false) {
+                return a.slice(i)
             }
         }
         return []
@@ -221,17 +230,17 @@ var h = function(e) {
         return e.span(pred1, a)
     }
     
-    e.elem = function(e, a) {
+    e.elem = function(el, a) {
         for (var i in a) {
-            if (e == a[i]) {
+            if (el == a[i]) {
                 return true
             }
         }
         return false
     }
     
-    e.notElem = function(e, a) {
-        return !e.elem(e, a)
+    e.notElem = function(el, a) {
+        return !e.elem(el, a)
     }
     
     // lookup
@@ -240,7 +249,7 @@ var h = function(e) {
         var a3 = []
         var a2len = a2.length
         for (var i in a1) {
-            if (i <= a2len) {
+            if (i >= a2len) {
                 return a3
             }
             a3.push([a1[i], a2[i]])
@@ -252,7 +261,7 @@ var h = function(e) {
         var a4 = []
         var a2len = a2.length, a3len = a3.length
         for (var i in a1) {
-            if (i <= a2len || i <= a3len) {
+            if (i >= a2len || i >= a3len) {
                 return a4
             }
             a4.push([a1[i], a2[i], a3[i]])
@@ -261,19 +270,49 @@ var h = function(e) {
     }
     
     e.zipWith = function(f, a1, a2) {
-        return false
+        var a3 = []
+        var a2len = a2.length
+        for (var i in a1) {
+            if (i >= a2len) {
+                return a3
+            }
+            a3.push(f(a1[i], a2[i]))
+        }
+        return a3
     }
     
     e.zipWith3 = function(f, a1, a2, a3) {
-        return false
+        var a4 = []
+        var a2len = a2.length, a3len = a3.length
+        for (var i in a1) {
+            if (i >= a2len || i >= a3len) {
+                return a4
+            }
+            a4.push(f(a1[i], a2[i], a3[i]))
+        }
+        return a4
     }
     
-    e.unzip = function(f, a1, a2) {
-        return false
+    e.unzip = function(a1) {
+        var a2 = []
+        var a3 = []
+        for (var i in a1) {
+            a2.push(a1[i][0])
+            a3.push(a1[i][1])
+        }
+        return [a2, a3]
     }
     
-    e.unzip3 = function(f, a1, a2, a3) {
-        return false
+    e.unzip3 = function(a1) {
+        var a2 = []
+        var a3 = []
+        var a4 = []
+        for (var i in a1) {
+            a2.push(a1[i][0])
+            a3.push(a1[i][1])
+            a4.push(a1[i][2])
+        }
+        return [a2, a3, a4]
     }
     
     e.lines = function(s) {
@@ -321,6 +360,84 @@ var h = function(e) {
         assert(e.null([]) == true, "null")
         assert(arraysEqual(e.reverse([3,4,5,6]), [6,5,4,3]), "reverse")
         assert(e.length([0,0,0]) == 3, "length")
+        var add = function(a, b) {
+            return a+b
+        }
+        assert(e.foldl(add, 0, [1, 2, 3, 4, 5]) == 15, "foldl")
+        assert(e.foldl1(add, [1, 2, 3, 4, 5]) == 15, "foldl1")
+        var sub = function(a, b) {
+            return a/b
+        }
+        assert(e.foldr(sub, 1000, [10, 10, 10]) == 1, "foldr")
+        assert(e.foldr1(sub, [10, 10, 10, 1000]) == 1, "foldr1")
+        assert(e.and([true, true, true]) == true, "and1")
+        assert(e.and([true, true, false]) == false, "and2")
+        assert(e.or([false, false, true]) == true, "or1")
+        assert(e.or([false, false, false]) == false, "or2")
+        assert(e.any(isEven, [3, 3, 2]) == true, "any1")
+        assert(e.any(isEven, [3, 3, 3]) == false, "any2")
+        assert(e.all(isEven, [2, 2, 3]) == false, "all1")
+        assert(e.all(isEven, [2, 2, 2]) == true, "all2")
+        assert(e.sum([1,2,3,4,5]) == 15, "sum")
+        assert(e.product([1,2,3,4,5]) == 120, "product")
+        assert(arraysEqual(e.concat([[1,2], [3, 4]]), [1,2,3,4]), "concat")
+        assert(arraysEqual(e.concat([[sqrt(1),sqrt(2)], [sqrt(3), sqrt(4)]]), [sqrt(1),sqrt(2),sqrt(3),sqrt(4)]), "concatMap")
+        assert(e.maximum([5, 30, 30, 2]) == 30, "maximum")
+        assert(e.minimum([6, 2, 3, 60, 1]) == 1, "minimum")
+        assert(arraysEqual(e.replicate(3, 4), [4,4,4]), "replicate")
+        // take
+        assert(arraysEqual(e.take(3, [1,2,3,4,5]), [1,2,3]), "take1")
+        assert(arraysEqual(e.take(3, [1,2]), [1,2]), "take2")
+        assert(arraysEqual(e.take(3, []), []), "take3")
+        assert(arraysEqual(e.take(-1, []), []), "take4")
+        assert(arraysEqual(e.take(0, [1, 2]), []), "take5")
+        // drop
+        assert(arraysEqual(e.drop(3, [1,2,3,4,5]), [4,5]), "drop1")
+        assert(arraysEqual(e.drop(3, [1,2]), []), "drop2")
+        assert(arraysEqual(e.drop(3, []), []), "drop3")
+        assert(arraysEqual(e.drop(-1, [1,2]), [1,2]), "drop4")
+        assert(arraysEqual(e.drop(0, [1,2]), [1,2]), "drop5")
+        // splitAt
+        assert(arraysEqual(e.splitAt(3, [1,2,3,4,5]), [[1,2,3], [4,5]]), "splitAt1")
+        assert(arraysEqual(e.splitAt(1, [1,2,3]), [[1], [2,3]]), "splitAt2")
+        assert(arraysEqual(e.splitAt(3, [1,2,3]), [[1,2,3], []]), "splitAt3")
+        assert(arraysEqual(e.splitAt(4, [1,2,3]), [[1,2,3], []]), "splitAt4")
+        assert(arraysEqual(e.splitAt(0, [1,2,3]), [[], [1,2,3]]), "splitAt5")
+        assert(arraysEqual(e.splitAt(-1, [1,2,3]), [[], [1,2,3]]), "splitAt6")
+        // takeWhile
+        var lt = function(a) {
+            return function(b) {
+                return b < a
+            }
+        }
+        assert(arraysEqual(e.takeWhile(lt(3), [1,2,3,4,1,2,3,4]), [1,2]), "takeWhile1")
+        assert(arraysEqual(e.takeWhile(lt(9), [1,2,3]), [1,2,3]), "takeWhile2")
+        assert(arraysEqual(e.takeWhile(lt(0), [1,2,3]), []), "takeWhile3")
+        // dropWhile
+        assert(arraysEqual(e.dropWhile(lt(3), [1,2,3,4,5,1,2,3]), [3,4,5,1,2,3]), "dropWhile1")
+        assert(arraysEqual(e.dropWhile(lt(9), [1,2,3]), []), "dropWhile2")
+        assert(arraysEqual(e.dropWhile(lt(0), [1,2,3]), [1,2,3]), "dropWhile3")
+        // span
+        assert(arraysEqual(e.span(lt(3), [1,2,3,4,1,2,3,4]), [[1,2], [3,4,1,2,3,4]]), "span1")
+        assert(arraysEqual(e.span(lt(9), [1,2,3]), [[1,2,3], []]), "span2")
+        assert(arraysEqual(e.span(lt(0), [1,2,3]), [[], [1,2,3]]), "span3")
+        // break
+        var gt = function(a) {
+            return function(b) {
+                return b > a
+            }
+        }
+        assert(arraysEqual(e.break(gt(3), [1,2,3,4,1,2,3,4]), [[1,2,3], [4,1,2,3,4]]), "break1")
+        assert(arraysEqual(e.break(lt(9), [1,2,3]), [[], [1,2,3]]), "break2")
+        assert(arraysEqual(e.break(gt(9), [1,2,3]), [[1,2,3], []]), "break3")
+        assert(e.elem(5, [1,"b",5,3,5.1]) == true, "elem1")
+        assert(e.elem(6, [1,"b",5,3,5.1]) == false, "elem2")
+        assert(e.notElem(6, [1,"b",5,3,5.1]) == true, "notElem1")
+        assert(e.notElem(5, [1,"b",5,3,5.1]) == false, "notElem2")
+        assert(arraysEqual(e.zip([1,2,3,4], ["a", "b", "c"]), [[1, "a"], [2, "b"], [3, "c"]]), "zip")
+        assert(arraysEqual(e.zip3([1,2,3,4], ["a", "b", "c"], [1.2, 2.2]), [[1, "a", 1.2], [2, "b", 2.2]]), "zip3")
+        assert(arraysEqual(e.unzip([[1, "a"], [2, "b"]]), [[1,2], ["a", "b"]]), "unzip")
+        assert(arraysEqual(e.unzip3([[1, "a", 1.2], [2, "b", 2.2]]), [[1,2], ["a", "b"], [1.2, 2.2]]), "unzip")
     }
     
     return e
